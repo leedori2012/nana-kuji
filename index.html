@@ -72,73 +72,43 @@
             cursor: pointer;
         }
 
-        /* 5x4 그리드 뽑기판 */
+        /* 5x4 (총 20개) 그리드 뽑기판 */
         .kuji-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr); /* 4열 */
-            gap: 10px;
+            grid-template-columns: repeat(5, 1fr); /* 한 줄에 5개씩 */
+            gap: 8px;
             margin-bottom: 16px;
-            perspective: 1000px;
         }
 
-        /* 카드 뒤집기 3D 스타일 */
+        /* 뽑기 카드 스타일 */
         .card {
-            aspect-ratio: 3 / 4;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 0.6s ease;
-            cursor: pointer;
-        }
-        .card.disabled { cursor: not-allowed; }
-        .card.flipped { transform: rotateY(180deg); }
-
-        .card-face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            border-radius: 10px;
+            aspect-ratio: 1 / 1;
+            background: linear-gradient(135deg, #ff8787, #ff6b6b);
+            color: white;
+            border-radius: 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            padding: 4px;
-        }
-
-        /* 카드 앞면 */
-        .card-front {
-            background: linear-gradient(135deg, #ff8787, #ff6b6b);
-            color: white;
-            border: 2px solid #ff8787;
-            font-size: 16px;
-        }
-        .card-front::after {
-            content: '🎁';
-            font-size: 18px;
-            margin-top: 4px;
-        }
-
-        /* 카드 뒷면 (뽑힌 상태) */
-        .card-back {
-            background: #fff;
-            border: 2px solid #ff8787;
-            color: #333;
-            transform: rotateY(180deg);
-            font-size: 10px;
-            text-align: center;
-            word-break: keep-all;
-            line-height: 1.2;
-        }
-        .card-back .badge {
             font-size: 14px;
-            font-weight: 900;
-            color: #e03131;
-            margin-bottom: 4px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            user-select: none;
+            transition: transform 0.1s ease;
+        }
+        .card:active { transform: scale(0.95); }
+        
+        /* 이미 뽑힌 카드 (뜯긴 흔적: 상 이름만 심플하게 표시) */
+        .card.drawn {
+            background: #e9ecef;
+            color: #868e96;
+            cursor: not-allowed;
+            font-size: 13px;
+            border: 1px dashed #adb5bd;
         }
 
-        /* 관리자 모달 */
+        /* 공통 모달(팝업) 스타일 */
         .modal {
             display: none;
             position: fixed;
@@ -150,26 +120,32 @@
         }
         .modal-content {
             background: white;
-            padding: 20px;
-            border-radius: 16px;
-            width: 90%;
-            max-width: 360px;
-            max-height: 70vh;
-            overflow-y: auto;
-            text-align: left;
+            padding: 24px;
+            border-radius: 20px;
+            width: 85%;
+            max-width: 320px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
-        .admin-list { list-style: none; padding: 0; margin: 10px 0; font-size: 13px; }
+        .modal-content h3 { margin-top: 0; color: #ff6b6b; }
+        .modal-msg { font-size: 15px; margin: 15px 0 20px 0; line-height: 1.4; word-break: keep-all; }
+        
+        .admin-list { list-style: none; padding: 0; margin: 10px 0; font-size: 13px; text-align: left; max-height: 150px; overflow-y: auto; }
         .admin-list li { padding: 6px 0; border-bottom: 1px solid #eee; }
 
-        .btn-reset {
+        .modal-btn {
             width: 100%;
-            padding: 12px;
-            background: #e9ecef;
-            color: #495057;
+            padding: 10px;
+            background: #ff6b6b;
+            color: white;
             border: none;
             border-radius: 10px;
             font-weight: bold;
             cursor: pointer;
+        }
+        .btn-reset-admin {
+            background: #fa5252;
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -188,49 +164,53 @@
         <!-- 이름 입력 영역 -->
         <div class="user-form" id="user-section">
             <input type="text" id="username-input" placeholder="이름을 입력해 주세요">
-            <button id="start-btn">입력</button>
+            <button id="start-btn">확인</button>
         </div>
 
         <!-- 5x4 (20개) 뽑기판 -->
         <div class="kuji-grid" id="grid"></div>
-
-        <!-- 초기화 버튼 -->
-        <button class="btn-reset" id="reset-btn">판 초기화 (새 20개 생성)</button>
     </div>
 
-    <!-- 관리자용 모달 -->
-    <div class="modal" id="admin-modal">
+    <!-- 당첨 결과 팝업 모달 -->
+    <div class="modal" id="result-modal">
         <div class="modal-content">
-            <h3>👑 관리자 전용 목록</h3>
+            <h3>🎉 당첨 결과</h3>
+            <div class="modal-msg" id="result-msg-text">내용</div>
+            <button class="modal-btn" onclick="closeResultModal()">확인</button>
+        </div>
+    </div>
+
+    <!-- 관리자 전용 모달 (목록 및 초기화) -->
+    <div class="modal" id="admin-modal">
+        <div class="modal-content" style="text-align: left;">
+            <h3>👑 관리자 모드</h3>
+            <div style="font-size: 13px; font-weight: bold; margin-top: 8px;">참여자 목록:</div>
             <ul class="admin-list" id="admin-list"></ul>
-            <button onclick="closeAdmin()" style="width:100%; padding:8px; margin-top:10px;">닫기</button>
+            <button class="modal-btn btn-reset-admin" id="admin-reset-btn">판 초기화 (새 20개 생성)</button>
+            <button onclick="closeAdminModal()" style="width:100%; padding:8px; margin-top:8px; background:#e9ecef; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">닫기</button>
         </div>
     </div>
 
     <script>
-        // Supabase 설정
         const SUPABASE_URL = 'https://qowkwhcfbdfxmyuvwzox.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... (전체 Anon Key 입력)'; 
 
         let supabaseClient = null;
         let currentUser = "";
 
-        // 당첨 문구 정의
         const PRIZE_TEXTS = {
             A: "A상 당첨! 스페셜 기프트에 배달까지!",
             B: "B상 당첨! 스페셜 기프트 당첨!",
             C: "C상 당첨! 주인장+먼작귀 셀카 증정!"
         };
 
-        // 초기 20개 뽑기 구성 (A: 3개, B: 7개, C: 10개)
         const DEFAULT_CARDS = [
             'A','A','A',
             'B','B','B','B','B','B','B',
             'C','C','C','C','C','C','C','C','C','C'
         ];
 
-        // 20개 카드의 상태 관리 (서버 공유용)
-        let cardsState = []; // [{ id: 0, prize: 'A', drawn: false, drawnBy: '' }, ...]
+        let cardsState = [];
         let drawHistory = [];
 
         async function init() {
@@ -241,7 +221,7 @@
             renderGrid();
         }
 
-        // 서버에서 뽑기판 상태 읽기
+        // 서버에서 최신 상태 불러오기
         async function loadBoardState() {
             if (!supabaseClient) {
                 initLocalCards();
@@ -261,7 +241,6 @@
             }
         }
 
-        // 새로운 20개 판 셔플 초기화
         function initLocalCards() {
             const shuffled = [...DEFAULT_CARDS].sort(() => Math.random() - 0.5);
             cardsState = shuffled.map((prize, idx) => ({
@@ -274,7 +253,6 @@
             drawHistory = [];
         }
 
-        // 서버에 뽑기판 저장
         async function saveBoardState() {
             if (!supabaseClient) return;
             await supabaseClient.from('kuji_board').upsert({
@@ -284,48 +262,49 @@
             });
         }
 
-        // 5x4 그리드 출력
+        // 5x4 그리드 렌더링
         function renderGrid() {
             const gridEl = document.getElementById('grid');
             gridEl.innerHTML = '';
 
             cardsState.forEach((card, index) => {
                 const cardEl = document.createElement('div');
-                cardEl.className = `card ${card.drawn ? 'flipped disabled' : ''}`;
                 
-                cardEl.innerHTML = `
-                    <div class="card-face card-front">${index + 1}</div>
-                    <div class="card-face card-back">
-                        <div class="badge">${card.prize}상</div>
-                        <div>${card.text || ''}</div>
-                    </div>
-                `;
+                if (card.drawn) {
+                    // 이미 뽑힌 경우: 뜯긴 흔적으로 상 이름만 심플하게 표시
+                    cardEl.className = 'card drawn';
+                    cardEl.innerText = `${card.prize}상`;
+                } else {
+                    // 안 뽑힌 경우: 번호 표시
+                    cardEl.className = 'card';
+                    cardEl.innerText = index + 1;
+                    cardEl.addEventListener('click', () => handleCardClick(index));
+                }
 
-                cardEl.addEventListener('click', () => handleCardClick(index));
                 gridEl.appendChild(cardEl);
             });
         }
 
-        // 카드 클릭 이벤트 handling
+        // 카드 클릭 시 뽑기 실행
         async function handleCardClick(index) {
-            const card = cardsState[index];
-
-            // 1. 이름 미입력 검사
             if (!currentUser) {
-                alert('먼저 이름을 입력하고 제출해 주세요!');
+                alert('먼저 이름을 입력하고 확인을 눌러주세요!');
                 document.getElementById('username-input').focus();
                 return;
             }
 
-            // 2. 이미 뽑힌 카드 처리
-            if (card.drawn) {
-                alert('이미 뽑힌 카드입니다!');
+            // 최신 상태를 서버에서 다시 동기화하여 겹침 방지
+            await loadBoardState();
+            if (cardsState[index].drawn) {
+                alert('이미 다른 사람이 뽑은 카드입니다!');
+                renderGrid();
                 return;
             }
 
-            // 3. 뽑기 실행
+            const card = cardsState[index];
             card.drawn = true;
             card.drawnBy = currentUser;
+            
             drawHistory.push({
                 user: currentUser,
                 prize: card.prize,
@@ -335,10 +314,22 @@
 
             renderGrid();
             await saveBoardState();
+
+            // 당첨 팝업 띄우기
+            showResultModal(card.text);
         }
 
-        // 이름 제출/시작 버튼
-        document.getElementById('start-btn').addEventListener('click', () => {
+        function showResultModal(text) {
+            document.getElementById('result-msg-text').innerText = text;
+            document.getElementById('result-modal').style.display = 'flex';
+        }
+
+        function closeResultModal() {
+            document.getElementById('result-modal').style.display = 'none';
+        }
+
+        // 이름 확인 버튼
+        document.getElementById('start-btn').addEventListener('click', async () => {
             const nameInput = document.getElementById('username-input').value.trim();
             if (!nameInput) {
                 alert('이름을 입력해 주세요!');
@@ -347,18 +338,18 @@
 
             // 관리자 로그인 분기
             if (nameInput === '관리자이하나') {
+                await loadBoardState();
                 showAdminModal();
                 return;
             }
 
             currentUser = nameInput;
-            alert(`안녕하세요 ${currentUser}님! 원하시는 번호의 뽑기를 클릭해 보세요.`);
+            alert(`환영합니다, ${currentUser}님! 원하는 번호를 터치해 주세요.`);
             document.getElementById('username-input').disabled = true;
             document.getElementById('start-btn').innerText = '참여중';
             document.getElementById('start-btn').disabled = true;
         });
 
-        // 관리자 모달 표시
         function showAdminModal() {
             const listEl = document.getElementById('admin-list');
             listEl.innerHTML = '';
@@ -367,24 +358,25 @@
             } else {
                 drawHistory.forEach(h => {
                     const li = document.createElement('li');
-                    li.innerText = `[${h.date}] ${h.user}님 ➡️ ${h.cardIndex}번 선택 (${h.prize}상)`;
+                    li.innerText = `[${h.date}] ${h.user}님 ➡️ ${h.cardIndex}번 (${h.prize}상)`;
                     listEl.appendChild(li);
                 });
             }
             document.getElementById('admin-modal').style.display = 'flex';
         }
 
-        function closeAdmin() {
+        function closeAdminModal() {
             document.getElementById('admin-modal').style.display = 'none';
         }
 
-        // 초기화 버튼 (새로운 20개 판 생성)
-        document.getElementById('reset-btn').addEventListener('click', async () => {
+        // 관리자 모달 내 초기화 버튼
+        document.getElementById('admin-reset-btn').addEventListener('click', async () => {
             if (confirm('모든 뽑기를 초기화하고 새로운 20개 판을 만드시겠습니까?')) {
                 initLocalCards();
                 renderGrid();
                 await saveBoardState();
-                alert('새로운 20개 뽑기판이 준비되었습니다!');
+                alert('새로운 20개 뽑기판이 생성되었습니다!');
+                closeAdminModal();
             }
         });
 
