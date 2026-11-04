@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>나나쿠지 럭키 드로우</title>
+  <title>나나 쿠지</title>
   <style>
     :root {
       --bg-color: #fdfbf7;
@@ -34,8 +34,8 @@
     .container {
       background: var(--card-bg);
       width: 100%;
-      max-width: 420px;
-      padding: 30px 20px;
+      max-width: 460px;
+      padding: 25px 20px;
       border-radius: 24px;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
       border: 2px solid #f0e6df;
@@ -43,73 +43,63 @@
     }
 
     h1 {
-      font-size: 1.8rem;
+      font-size: 2rem;
       color: #ff6b81;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
 
-    p.subtitle {
-      font-size: 0.95rem;
-      color: #888;
-      margin-bottom: 24px;
-    }
-
-    .display-box {
-      width: 100%;
-      height: 180px;
-      background: #fff5f7;
-      border: 2px dashed #ffc2d1;
-      border-radius: 16px;
+    /* 상 정보 표시 현황 (4번 조건) */
+    .prize-info {
       display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 24px;
-      transition: all 0.3s ease;
-    }
-
-    .prize-rank {
-      font-size: 2.2rem;
-      font-weight: 800;
-      color: #ff4757;
-      margin-bottom: 6px;
-    }
-
-    .prize-name {
-      font-size: 1.1rem;
+      justify-content: space-around;
+      background: #fff5f7;
+      border: 1px dashed #ffc2d1;
+      padding: 10px;
+      border-radius: 12px;
+      font-size: 0.9rem;
       font-weight: 600;
-      color: #2f3542;
+      margin-bottom: 15px;
+      color: #444;
     }
 
-    .btn {
-      width: 100%;
-      padding: 16px;
-      font-size: 1.1rem;
+    .prize-info span b {
+      color: #ff4757;
+    }
+
+    /* 참여자 이름 입력 레이아웃 (7번 조건) */
+    .user-form {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .user-form input {
+      flex: 1;
+      padding: 12px;
+      font-size: 0.95rem;
+      border: 2px solid #f0e6df;
+      border-radius: 12px;
+      outline: none;
+    }
+
+    .user-form input:focus {
+      border-color: var(--primary-color);
+    }
+
+    .user-form button {
+      padding: 0 18px;
+      font-size: 0.95rem;
       font-weight: 700;
-      color: #ffffff;
+      color: white;
       background-color: var(--primary-color);
       border: none;
-      border-radius: 16px;
+      border-radius: 12px;
       cursor: pointer;
-      transition: background-color 0.2s ease;
     }
 
-    .btn:hover {
+    .user-form button:hover {
       background-color: var(--primary-hover);
     }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>나나쿠지 럭키 드로우</h1>
-    <p class="subtitle">버튼을 눌러 뽑기를 시작해보세요!</p>
-    
-    <div class="display-box">
-      <div class="prize-rank">?</div>
-      <div class="prize-name">두근두근 결과는?</div>
-    </div>
 
-    <button class="btn">뽑기 하기</button>
-  </div>
-</body>
-</html>
+    .status-msg {
+      font-size: 0.
