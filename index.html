@@ -87,4 +87,29 @@
       font-size: 1.1rem;
       font-weight: 700;
       color: #ffffff;
-      background-color: var(--
+      background-color: var(--primary-color);
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .btn:hover {
+      background-color: var(--primary-hover);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>나나쿠지 럭키 드로우</h1>
+    <p class="subtitle">버튼을 눌러 뽑기를 시작해보세요!</p>
+    
+    <div class="display-box">
+      <div class="prize-rank">?</div>
+      <div class="prize-name">두근두근 결과는?</div>
+    </div>
+
+    <button class="btn">뽑기 하기</button>
+  </div>
+</body>
+</html>
