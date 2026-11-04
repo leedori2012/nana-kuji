@@ -1,545 +1,242 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>나나 쿠지</title>
-    <!-- Supabase 라이브러리 추가 (unpkg CDN) -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>나나 쿠지</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
 
-        body {
-            background-color: #fff0f5;
-            color: #333;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-        }
+    body {
+      background-color: #ffeef2;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 20px 15px;
+    }
 
-        .container {
-            width: 100%;
-            max-width: 500px;
-            background: #ffffff;
-            border-radius: 24px;
-            box-shadow: 0 10px 30px rgba(255, 182, 193, 0.3);
-            padding: 24px;
-            margin-top: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+    .container {
+      background: #ffffff;
+      width: 100%;
+      max-width: 420px;
+      border-radius: 24px;
+      padding: 24px 20px;
+      box-shadow: 0 10px 25px rgba(255, 182, 193, 0.3);
+    }
 
-        h1 {
-            font-size: 26px;
-            color: #ff69b4;
-            margin-bottom: 16px;
-            font-weight: 800;
-            text-align: center;
-        }
+    .title {
+      text-align: center;
+      color: #ff69b4;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
 
-        #login-section {
-            width: 100%;
-            text-align: center;
-            padding: 20px 0;
-        }
+    /* 참여자 영역 */
+    .user-info {
+      background: #fff5f7;
+      border-radius: 16px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
 
-        #login-section p {
-            font-size: 15px;
-            margin-bottom: 12px;
-            color: #555;
-        }
+    .user-name {
+      color: #d81b60;
+      font-weight: bold;
+      font-size: 15px;
+    }
 
-        .input-group {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-        }
+    .btn-change-name {
+      background: #b0bec5;
+      color: #ffffff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: bold;
+    }
 
-        input[type="text"] {
-            padding: 12px 16px;
-            font-size: 15px;
-            border: 2px solid #ffb6c1;
-            border-radius: 12px;
-            outline: none;
-            width: 70%;
-            transition: border-color 0.2s;
-        }
+    /* 수량 판넬 */
+    .stock-board {
+      background: #fff5f7;
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      justify-content: space-around;
+      text-align: center;
+      margin-bottom: 20px;
+    }
 
-        input[type="text"]:focus {
-            border-color: #ff69b4;
-        }
+    .stock-item {
+      flex: 1;
+    }
 
-        button {
-            padding: 12px 20px;
-            font-size: 15px;
-            font-weight: bold;
-            background-color: #ff69b4;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-        }
+    .stock-label {
+      font-size: 13px;
+      color: #757575;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
 
-        button:active {
-            transform: scale(0.96);
-        }
+    .stock-count {
+      font-size: 18px;
+      font-weight: bold;
+      color: #d81b60;
+    }
 
-        button:hover {
-            background-color: #ff1493;
-        }
+    /* 버튼 영역 */
+    .action-area {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
 
-        #kuji-section {
-            width: 100%;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-        }
+    .btn-draw {
+      background: #ff69b4;
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 16px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(255, 105, 180, 0.3);
+      transition: background 0.2s;
+    }
 
-        .user-info-bar {
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #fff5f8;
-            padding: 10px 16px;
-            border-radius: 12px;
-            margin-bottom: 16px;
-            font-size: 14px;
-        }
+    .btn-draw:hover {
+      background: #ff4081;
+    }
 
-        .user-info-bar span {
-            font-weight: bold;
-            color: #ff1493;
-        }
+    .btn-draw:disabled {
+      background: #cccccc;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
 
-        .status-board {
-            display: flex;
-            justify-content: space-around;
-            width: 100%;
-            background: #faf0f2;
-            padding: 12px;
-            border-radius: 14px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .prize-count-item {
-            font-size: 13px;
-            color: #666;
-        }
-
-        .prize-count-item b {
-            display: block;
-            font-size: 16px;
-            color: #ff1493;
-            margin-top: 2px;
-        }
-
-        .kuji-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-
-        .kuji-card {
-            aspect-ratio: 1;
-            perspective: 1000px;
-            cursor: pointer;
-        }
-
-        .kuji-card.opened {
-            cursor: default;
-        }
-
-        .card-inner {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            text-align: center;
-            transition: transform 0.6s;
-            transform-style: preserve-3d;
-            border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
-        }
-
-        .kuji-card.opened .card-inner {
-            transform: rotateY(180deg);
-        }
-
-        .card-front, .card-back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border-radius: 12px;
-            font-weight: bold;
-        }
-
-        .card-front {
-            background: linear-gradient(135deg, #ffb6c1, #ff69b4);
-            color: white;
-            font-size: 16px;
-            border: 2px solid #fff;
-        }
-
-        .card-front:hover {
-            background: linear-gradient(135deg, #ff69b4, #ff1493);
-        }
-
-        .card-back {
-            background: #fff;
-            color: #333;
-            transform: rotateY(180deg);
-            font-size: 12px;
-            padding: 4px;
-            border: 2px solid #ffb6c1;
-        }
-
-        .card-back.prize-A { background-color: #ffe4e1; border-color: #ff6b6b; color: #d63031; }
-        .card-back.prize-B { background-color: #fffacd; border-color: #f1c40f; color: #d35400; }
-        .card-back.prize-C { background-color: #e0ffff; border-color: #00cec9; color: #0984e3; }
-
-        #result-modal, #admin-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .modal-content, .admin-content {
-            background: white;
-            padding: 24px;
-            border-radius: 20px;
-            text-align: center;
-            max-width: 320px;
-            width: 90%;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-
-        .admin-content {
-            max-width: 420px;
-            max-height: 80vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .log-list {
-            flex-grow: 1;
-            overflow-y: auto;
-            border: 1px solid #eee;
-            border-radius: 10px;
-            padding: 10px;
-            margin-bottom: 16px;
-            max-height: 250px;
-            background: #fafafa;
-            text-align: left;
-        }
-
-        .log-item {
-            font-size: 13px;
-            padding: 8px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .log-item span {
-            color: #ff1493;
-            font-weight: bold;
-        }
-
-        .admin-btn-group {
-            display: flex;
-            gap: 8px;
-        }
-
-        .admin-btn-group button {
-            flex: 1;
-            padding: 10px;
-            font-size: 14px;
-        }
-
-        .btn-secondary {
-            background-color: #bbb;
-        }
-        .btn-secondary:hover {
-            background-color: #999;
-        }
-    </style>
+    /* 결과 창 */
+    .result-box {
+      margin-top: 16px;
+      padding: 14px;
+      background: #fff;
+      border: 2px dashed #ffb6c1;
+      border-radius: 16px;
+      text-align: center;
+      font-size: 15px;
+      color: #333;
+      min-height: 24px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>✨ 나나 쿠지 ✨</h1>
+  <div class="container">
+    <h1 class="title">✨ 나나 쿠지 ✨</h1>
 
-        <div id="login-section">
-            <p>쿠지에 참여할 이름을 입력해 주세요!</p>
-            <div class="input-group">
-                <input type="text" id="username-input" placeholder="이름 입력 (예: 이하나)">
-                <button onclick="startKuji()">입장하기</button>
-            </div>
-        </div>
-
-        <div id="kuji-section">
-            <div class="user-info-bar">
-                <span>참여자: <b id="display-name"></b>님</span>
-                <button onclick="logout()" style="padding: 4px 10px; font-size: 12px; background:#bbb;">이름 변경</button>
-            </div>
-
-            <div class="status-board">
-                <div class="prize-count-item">A상 남은 수량<b id="count-A">3</b></div>
-                <div class="prize-count-item">B상 남은 수량<b id="count-B">7</b></div>
-                <div class="prize-count-item">C상 남은 수량<b id="count-C">10</b></div>
-            </div>
-
-            <div class="kuji-grid" id="kuji-grid"></div>
-        </div>
+    <!-- 참여자 설정 -->
+    <div class="user-info">
+      <div class="user-name">참여자: <span id="participant-name">테스트님</span></div>
+      <button class="btn-change-name" onclick="changeName()">이름 변경</button>
     </div>
 
-    <div id="result-modal">
-        <div class="modal-content">
-            <h2 id="modal-title" style="color:#ff1493; margin-bottom:12px;">당첨 결과</h2>
-            <p id="modal-desc" style="margin-bottom:20px; line-height:1.5;"></p>
-            <button onclick="closeModal()">확인</button>
-        </div>
+    <!-- 남은 수량 현황 -->
+    <div class="stock-board">
+      <div class="stock-item">
+        <div class="stock-label">A상 남은 수량</div>
+        <div class="stock-count" id="count-a">0</div>
+      </div>
+      <div class="stock-item">
+        <div class="stock-label">B상 남은 수량</div>
+        <div class="stock-count" id="count-b">0</div>
+      </div>
+      <div class="stock-item">
+        <div class="stock-label">C상 남은 수량</div>
+        <div class="stock-count" id="count-c">0</div>
+      </div>
     </div>
 
-    <div id="admin-modal">
-        <div class="admin-content">
-            <h2>👑 관리자 대시보드</h2>
-            <p style="font-size: 13px; color: #666; margin-bottom: 8px;">지금까지의 참여자 및 뽑기 내역입니다.</p>
-            <div class="log-list" id="log-list-container"></div>
-            <div class="admin-btn-group">
-                <button class="btn-secondary" onclick="resetKujiData()">쿠지 전체 초기화</button>
-                <button onclick="closeAdminModal()">닫기</button>
-            </div>
-        </div>
+    <!-- 뽑기 버튼 및 결과 -->
+    <div class="action-area">
+      <button class="btn-draw" id="draw-btn" onclick="drawKuji()">쿠지 뽑기!</button>
+      <div class="result-box" id="result-message">버튼을 눌러 뽑기를 시작하세요!</div>
     </div>
+  </div>
 
-    <script>
-        const SUPABASE_URL = 'https://stenxfgovxvpydguwurx.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'Sb_publishable_MIma1WJVuS0E2ghlj9rxzw_95O87v05';
-        
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  <script>
+    // 1. 현재 수량 데이터 (숫자로 관리)
+    let kujiStock = {
+      A: 2,
+      B: 3,
+      C: 5
+    };
 
-        const initialPrizes = [
-            'A', 'A', 'A',
-            'B', 'B', 'B', 'B', 'B', 'B', 'B',
-            'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C'
-        ];
+    // 2. 화면에 수량 렌더링하는 함수 (여기서 [object HTMLElement] 오류 방지!)
+    function updateStockDisplay() {
+      document.getElementById('count-a').textContent = kujiStock.A;
+      document.getElementById('count-b').textContent = kujiStock.B;
+      document.getElementById('count-c').textContent = kujiStock.C; // 숫자 데이터만 출력
 
-        const prizeDetails = {
-            'A': 'A상 당첨! 스페셜 기프트에 배달까지!',
-            'B': 'B상 당첨! 스페셜 기프트 당첨!',
-            'C': 'C상 당첨! 주인장+먼작귀 셀카 증정!'
-        };
+      const totalStock = kujiStock.A + kujiStock.B + kujiStock.C;
+      const drawBtn = document.getElementById('draw-btn');
 
-        let currentUser = '';
-        let kujiState = [];
+      if (totalStock === 0) {
+        drawBtn.disabled = true;
+        drawBtn.textContent = '품절되었습니다!';
+      }
+    }
 
-        async function initApp() {
-            await fetchKujiData();
-            
-            supabaseClient
-                .channel('public:kuji_state')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'kuji_state' }, payload => {
-                    fetchKujiData();
-                })
-                .subscribe();
+    // 3. 뽑기 실행 함수
+    function drawKuji() {
+      const availablePrizes = [];
+
+      // 남은 수량이 있는 상품만 배열에 가상 등록
+      for (let prize in kujiStock) {
+        for (let i = 0; i < kujiStock[prize]; i++) {
+          availablePrizes.push(prize);
         }
+      }
 
-        async function fetchKujiData() {
-            let { data, error } = await supabaseClient.from('kuji_state').select('*').order('id', { ascending: true });
-            
-            if (error || !data || data.length === 0) {
-                await createInitialData();
-            } else {
-                kujiState = data;
-                renderBoard();
-            }
-        }
+      if (availablePrizes.length === 0) {
+        alert('모든 상품이 소진되었습니다!');
+        return;
+      }
 
-        async function createInitialData() {
-            let shuffled = [...initialPrizes].sort(() => Math.random() - 0.5);
-            let rows = shuffled.map((prize, index) => ({
-                id: index,
-                prize: prize,
-                opened: false,
-                winner: null
-            }));
+      // 랜덤 뽑기 계산
+      const randomIndex = Math.floor(Math.random() * availablePrizes.length);
+      const winPrize = availablePrizes[randomIndex];
 
-            let { error } = await supabaseClient.from('kuji_state').upsert(rows);
-            if (!error) {
-                kujiState = rows;
-                renderBoard();
-            }
-        }
+      // 차감 및 화면 업데이트
+      kujiStock[winPrize]--;
+      updateStockDisplay();
 
-        function startKuji() {
-            const input = document.getElementById('username-input');
-            const name = input.value.trim();
+      // 결과 메시지 출력
+      const userName = document.getElementById('participant-name').textContent;
+      document.getElementById('result-message').innerHTML = 
+        `🎉 <b>${userName}</b>님, <b>[ ${winPrize}상 ]</b> 당첨을 축하합니다!`;
+    }
 
-            if (!name) {
-                alert('이름을 입력해 주세요!');
-                return;
-            }
+    // 4. 이름 변경 함수
+    function changeName() {
+      const newName = prompt('새로운 이름을 입력하세요:', '테스트님');
+      if (newName && newName.trim() !== '') {
+        document.getElementById('participant-name').textContent = newName.trim();
+      }
+    }
 
-            currentUser = name;
+    // 첫 로딩 시 수량 표시 실행
+    updateStockDisplay();
+  </script>
 
-            if (currentUser === '관리자이하나') {
-                openAdminModal();
-                input.value = '';
-                return;
-            }
-
-            document.getElementById('display-name').innerText = currentUser;
-            document.getElementById('login-section').style.display = 'none';
-            document.getElementById('kuji-section').style.display = 'flex';
-            renderBoard();
-        }
-
-        function logout() {
-            currentUser = '';
-            document.getElementById('login-section').style.display = 'block';
-            document.getElementById('kuji-section').style.display = 'none';
-            document.getElementById('username-input').value = '';
-        }
-
-        function renderBoard() {
-            const grid = document.getElementById('kuji-grid');
-            if (!grid) return;
-            grid.innerHTML = '';
-
-            let countA = 0, countB = 0, countC = 0;
-
-            kujiState.forEach((card, index) => {
-                if (!card.opened) {
-                    if (card.prize === 'A') countA++;
-                    if (card.prize === 'B') countB++;
-                    if (card.prize === 'C') countC++;
-                }
-
-                const cardEl = document.createElement('div');
-                cardEl.className = `kuji-card ${card.opened ? 'opened' : ''}`;
-                cardEl.onclick = () => selectCard(index);
-
-                cardEl.innerHTML = `
-                    <div class="card-inner">
-                        <div class="card-front">
-                            <span>#${index + 1}</span>
-                        </div>
-                        <div class="card-back prize-${card.prize}">
-                            <span><b>${card.prize}상</b></span>
-                            <div style="font-size:9px; margin-top:2px; color:#555;">(${card.winner || ''})</div>
-                        </div>
-                    </div>
-                `;
-                grid.appendChild(cardEl);
-            });
-
-            const countAEl = document.getElementById('count-A');
-            const countBEl = document.getElementById('count-B');
-            const countCEl = document.getElementById('count-C');
-            if (countAEl) countAEl.innerText = countA;
-            if (countBEl) countBEl.innerText = countB;
-            if (countCEl) countCEl.innerText = countCEl;
-        }
-
-        async function selectCard(index) {
-            let card = kujiState[index];
-            if (card.opened) return;
-
-            let { error } = await supabaseClient
-                .from('kuji_state')
-                .update({ opened: true, winner: currentUser })
-                .eq('id', index);
-
-            if (error) {
-                alert('뽑기 처리 중 오류가 발생했습니다. 다시 시도해 주세요!');
-                return;
-            }
-
-            card.opened = true;
-            card.winner = currentUser;
-            renderBoard();
-            showResultModal(card.prize);
-        }
-
-        function showResultModal(prizeType) {
-            document.getElementById('modal-title').innerText = `${prizeType}상 당첨! 🎉`;
-            document.getElementById('modal-desc').innerText = prizeDetails[prizeType];
-            document.getElementById('result-modal').style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('result-modal').style.display = 'none';
-        }
-
-        async function openAdminModal() {
-            const container = document.getElementById('log-list-container');
-            container.innerHTML = '불러오는 중...';
-
-            let { data, error } = await supabaseClient
-                .from('kuji_state')
-                .select('*')
-                .eq('opened', true)
-                .order('id', { ascending: true });
-
-            container.innerHTML = '';
-
-            if (error || !data || data.length === 0) {
-                container.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">아직 참여 내역이 없습니다.</div>';
-            } else {
-                data.forEach((log, idx) => {
-                    const item = document.createElement('div');
-                    item.className = 'log-item';
-                    item.innerHTML = `
-                        <div><b>${idx + 1}. [${log.winner}]</b>님</div>
-                        <div><span>${log.prize}상</span> (#${log.id + 1})</div>
-                    `;
-                    container.appendChild(item);
-                });
-            }
-
-            document.getElementById('admin-modal').style.display = 'flex';
-        }
-
-        function closeAdminModal() {
-            document.getElementById('admin-modal').style.display = 'none';
-            logout();
-        }
-
-        async function resetKujiData() {
-            if (confirm('쿠지 판과 모든 참여 기록을 초기화하시겠습니까?')) {
-                await supabaseClient.from('kuji_state').delete().neq('id', -1);
-                await createInitialData();
-                alert('초기화되었습니다!');
-                closeAdminModal();
-            }
-        }
-
-        initApp();
-    </script>
 </body>
 </html>
