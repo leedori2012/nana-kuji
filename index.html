@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>나나 쿠지</title>
+  <!-- Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -137,6 +139,42 @@
       min-height: 24px;
       font-weight: bold;
     }
+
+    /* 관리자 히스토리 보기 영역 */
+    .admin-section {
+      margin-top: 24px;
+      border-top: 1px solid #ffe4e8;
+      padding-top: 16px;
+    }
+
+    .admin-toggle-btn {
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 12px;
+      text-decoration: underline;
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+    }
+
+    .history-list {
+      display: none;
+      margin-top: 12px;
+      max-height: 180px;
+      overflow-y: auto;
+      font-size: 13px;
+      background: #fafafa;
+      padding: 10px;
+      border-radius: 12px;
+    }
+
+    .history-item {
+      padding: 6px 0;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+    }
   </style>
 </head>
 <body>
@@ -154,15 +192,15 @@
     <div class="stock-board">
       <div class="stock-item">
         <div class="stock-label">A상 남은 수량</div>
-        <div class="stock-count" id="count-a">0</div>
+        <div class="stock-count" id="count-a">-</div>
       </div>
       <div class="stock-item">
         <div class="stock-label">B상 남은 수량</div>
-        <div class="stock-count" id="count-b">0</div>
+        <div class="stock-count" id="count-b">-</div>
       </div>
       <div class="stock-item">
         <div class="stock-label">C상 남은 수량</div>
-        <div class="stock-count" id="count-c">0</div>
+        <div class="stock-count" id="count-c">-</div>
       </div>
     </div>
 
@@ -171,21 +209,46 @@
       <button class="btn-draw" id="draw-btn" onclick="drawKuji()">쿠지 뽑기!</button>
       <div class="result-box" id="result-message">버튼을 눌러 뽑기를 시작하세요!</div>
     </div>
+
+    <!-- 관리자 내역 조회 영역 -->
+    <div class="admin-section">
+      <button class="admin-toggle-btn" onclick="toggleAdminHistory()">🔒 관리자 뽑기 기록 확인</button>
+      <div class="history-list" id="history-list">
+        <!-- 뽑기 기록이 동적으로 들어옵니다 -->
+      </div>
+    </div>
   </div>
 
   <script>
-    // 1. 현재 수량 데이터 (숫자로 관리)
-    let kujiStock = {
-      A: 2,
-      B: 3,
-      C: 5
-    };
+    // 입력해주신 Supabase 연동 정보 반영 완료
+    const SUPABASE_URL = 'https://stenxfgovxvpydguwurx.supabase.co';
+    const SUPABASE_KEY = 'Sb_publishable_MIma1WJVuS0E2ghlj9rxzw_95O87v05';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 2. 화면에 수량 렌더링하는 함수 (여기서 [object HTMLElement] 오류 방지!)
-    function updateStockDisplay() {
+    let kujiStock = { A: 0, B: 0, C: 0 };
+
+    // DB에서 실시간 수량 불러오기 & 화면 렌더링
+    async function fetchStock() {
+      const { data, error } = await supabaseClient
+        .from('kuji_stock')
+        .select('*');
+
+      if (error) {
+        console.error('수량 불러오기 실패:', error);
+        return;
+      }
+
+      data.forEach(item => {
+        kujiStock[item.prize_type] = item.count;
+      });
+
+      renderStock();
+    }
+
+    function renderStock() {
       document.getElementById('count-a').textContent = kujiStock.A;
       document.getElementById('count-b').textContent = kujiStock.B;
-      document.getElementById('count-c').textContent = kujiStock.C; // 숫자 데이터만 출력
+      document.getElementById('count-c').textContent = kujiStock.C;
 
       const totalStock = kujiStock.A + kujiStock.B + kujiStock.C;
       const drawBtn = document.getElementById('draw-btn');
@@ -193,14 +256,21 @@
       if (totalStock === 0) {
         drawBtn.disabled = true;
         drawBtn.textContent = '품절되었습니다!';
+      } else {
+        drawBtn.disabled = false;
+        drawBtn.textContent = '쿠지 뽑기!';
       }
     }
 
-    // 3. 뽑기 실행 함수
-    function drawKuji() {
-      const availablePrizes = [];
+    // 뽑기 실행 (동일 확률 계산 및 DB 차감/기록)
+    async function drawKuji() {
+      const drawBtn = document.getElementById('draw-btn');
+      drawBtn.disabled = true;
 
-      // 남은 수량이 있는 상품만 배열에 가상 등록
+      // 최신 수량 재확인
+      await fetchStock();
+
+      const availablePrizes = [];
       for (let prize in kujiStock) {
         for (let i = 0; i < kujiStock[prize]; i++) {
           availablePrizes.push(prize);
@@ -209,24 +279,42 @@
 
       if (availablePrizes.length === 0) {
         alert('모든 상품이 소진되었습니다!');
+        drawBtn.disabled = true;
         return;
       }
 
-      // 랜덤 뽑기 계산
+      // 랜덤 뽑기 (남은 전체 쿠지 중 동등한 확률)
       const randomIndex = Math.floor(Math.random() * availablePrizes.length);
       const winPrize = availablePrizes[randomIndex];
 
-      // 차감 및 화면 업데이트
-      kujiStock[winPrize]--;
-      updateStockDisplay();
-
-      // 결과 메시지 출력
       const userName = document.getElementById('participant-name').textContent;
+
+      // DB 1: 수량 차감
+      const newCount = kujiStock[winPrize] - 1;
+      const { error: updateError } = await supabaseClient
+        .from('kuji_stock')
+        .update({ count: newCount })
+        .eq('prize_type', winPrize);
+
+      if (updateError) {
+        alert('뽑기 처리 중 오류가 발생했습니다.');
+        drawBtn.disabled = false;
+        return;
+      }
+
+      // DB 2: 뽑기 기록 저장 (관리자 확인용)
+      await supabaseClient
+        .from('kuji_history')
+        .insert([{ user_name: userName, prize: winPrize }]);
+
+      // 화면 업데이트
+      await fetchStock();
+
       document.getElementById('result-message').innerHTML = 
         `🎉 <b>${userName}</b>님, <b>[ ${winPrize}상 ]</b> 당첨을 축하합니다!`;
     }
 
-    // 4. 이름 변경 함수
+    // 이름 변경 함수
     function changeName() {
       const newName = prompt('새로운 이름을 입력하세요:', '테스트님');
       if (newName && newName.trim() !== '') {
@@ -234,9 +322,37 @@
       }
     }
 
-    // 첫 로딩 시 수량 표시 실행
-    updateStockDisplay();
-  </script>
+    // 관리자 전용 - 누가 뭘 뽑았는지 내역 보기
+    async function toggleAdminHistory() {
+      const historyList = document.getElementById('history-list');
+      if (historyList.style.display === 'block') {
+        historyList.style.display = 'none';
+        return;
+      }
 
+      const { data, error } = await supabaseClient
+        .from('kuji_history')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        alert('기록을 불러오지 못했습니다.');
+        return;
+      }
+
+      historyList.innerHTML = data.map(item => `
+        <div class="history-item">
+          <span><b>${item.user_name}</b>님</span>
+          <span>${item.prize}상</span>
+          <span style="color:#aaa; font-size:11px;">${new Date(item.created_at).toLocaleTimeString()}</span>
+        </div>
+      `).join('');
+
+      historyList.style.display = 'block';
+    }
+
+    // 초기 로딩 시 데이터 조회
+    fetchStock();
+  </script>
 </body>
 </html>
