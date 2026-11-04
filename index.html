@@ -50,3 +50,236 @@
 
     .prize-info {
       display: flex;
+      justify-content: space-around;
+      background: #fff5f7;
+      border: 1px dashed #ffc2d1;
+      padding: 10px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: #444;
+    }
+
+    .prize-info span b {
+      color: #ff4757;
+    }
+
+    .user-form {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .user-form input {
+      flex: 1;
+      padding: 12px;
+      font-size: 0.95rem;
+      border: 2px solid #f0e6df;
+      border-radius: 12px;
+      outline: none;
+    }
+
+    .user-form input:focus {
+      border-color: var(--primary-color);
+    }
+
+    .user-form button {
+      padding: 0 18px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: white;
+      background-color: var(--primary-color);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .user-form button:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .status-msg {
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 15px;
+    }
+
+    .kuji-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      perspective: 1000px;
+    }
+
+    .kuji-card {
+      width: 100%;
+      height: 70px;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s ease;
+      cursor: pointer;
+    }
+
+    .kuji-card.disabled {
+      cursor: not-allowed;
+    }
+
+    .kuji-card.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+
+    .card-front {
+      background: linear-gradient(135deg, #ff9ebb, #ffd166);
+      color: white;
+      font-size: 1.1rem;
+      border: 2px solid #ffffff;
+    }
+
+    .card-back {
+      background: #f8f9fa;
+      color: #333;
+      border: 2px solid #ddd;
+      transform: rotateY(180deg);
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 4px;
+      word-break: keep-all;
+    }
+
+    .card-back.rank-A { background: #ffeaa7; border-color: #fdcb6e; color: #d63031; }
+    .card-back.rank-B { background: #ffe3e8; border-color: #ff7ba3; color: #e84393; }
+    .card-back.rank-C { background: #e3fafc; border-color: #99e9f2; color: #0c8599; }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 380px;
+      max-height: 80vh;
+      overflow-y: auto;
+      text-align: left;
+    }
+
+    .modal-content h2 {
+      font-size: 1.2rem;
+      color: #ff6b81;
+      margin-bottom: 12px;
+    }
+
+    .history-list {
+      list-style: none;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .history-list li {
+      border-bottom: 1px solid #eee;
+      padding: 6px 0;
+    }
+
+    .close-btn {
+      margin-top: 15px;
+      width: 100%;
+      padding: 10px;
+      background: #ff6b81;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>나나 쿠지</h1>
+
+    <div class="prize-info">
+      <span>A상: <b id="cntA">3</b>개</span>
+      <span>B상: <b id="cntB">7</b>개</span>
+      <span>C상: <b id="cntC">10</b>개</span>
+    </div>
+
+    <div class="user-form">
+      <input type="text" id="username" placeholder="참여자 이름을 입력하세요" />
+      <button id="registerBtn">입력</button>
+    </div>
+
+    <div class="status-msg" id="statusMsg">이름을 입력해야 뽑기에 참여할 수 있습니다.</div>
+
+    <div class="kuji-grid" id="kujiGrid"></div>
+  </div>
+
+  <div class="modal" id="adminModal">
+    <div class="modal-content">
+      <h2>👑 관리자 전용 - 전체 참여 내역</h2>
+      <ul class="history-list" id="historyList"></ul>
+      <button class="close-btn" id="closeModal">닫기</button>
+    </div>
+  </div>
+
+  <script>
+    const prizeTypes = [
+      { rank: 'A상', text: 'A상 당첨! 스페셜 기프트에 배달까지!', class: 'rank-A' },
+      { rank: 'B상', text: 'B상 당첨! 스페셜 기프트 당첨!', class: 'rank-B' },
+      { rank: 'C상', text: 'C상 당첨! 주인장+먼작귀 셀카 증정!', class: 'rank-C' }
+    ];
+
+    let currentParticipant = '';
+    const historyData = [];
+    let counts = { A: 3, B: 7, C: 10 };
+
+    const usernameInput = document.getElementById('username');
+    const registerBtn = document.getElementById('registerBtn');
+    const statusMsg = document.getElementById('statusMsg');
+    const kujiGrid = document.getElementById('kujiGrid');
+    const adminModal = document.getElementById('adminModal');
+    const historyList = document.getElementById('historyList');
+    const closeModal = document.getElementById('closeModal');
+
+    registerBtn.addEventListener('click', handleRegister);
+    usernameInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleRegister();
+    });
+
+    function handleRegister() {
+      const inputVal = usernameInput.value.trim();
+
+      if (!inputVal) {
+        alert('이름을 입력해주세요!');
+        return;
+      }
+
+      if (inputVal === '관리자이하나') {
+        showAdminHistory();
+        usernameInput.value = '';
+        return;
+      }
+
+      currentParticipant = inputVal
