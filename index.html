@@ -1,386 +1,420 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/color/96/lucky-block.png">
-    <title>Nana Kuji 뽑기판</title>
-    <!-- Supabase CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #f0f2f5;
-            color: #333;
-            margin: 0;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .container {
-            width: 100%;
-            max-width: 440px;
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            text-align: center;
-        }
-        h1 { font-size: 22px; margin: 0 0 8px 0; color: #1a1a1a; }
-        
-        /* 상품 수량 안내 */
-        .prize-info {
-            background: #fff5f5;
-            border: 1px solid #ffc9c9;
-            border-radius: 12px;
-            padding: 10px;
-            font-size: 13px;
-            color: #c92a2a;
-            margin-bottom: 16px;
-            display: flex;
-            justify-content: space-around;
-            font-weight: bold;
-        }
+  <meta charset="UTF-8" />
+  <!-- 모바일 사파리/인터넷 터치 및 화면 비율 최적화 (자동 확대 방지) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>나나쿠지</title>
+  
+  <!-- Supabase JS 라이브러리 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-        /* 참여자 입력 폼 */
-        .user-form {
-            background: #f8f9fa;
-            padding: 14px;
-            border-radius: 12px;
-            margin-bottom: 16px;
-            display: flex;
-            gap: 8px;
-        }
-        .user-form input {
-            flex: 1;
-            padding: 10px 12px;
-            border: 1px solid #ced4da;
-            border-radius: 8px;
-            font-size: 14px;
-            outline: none;
-        }
-        .user-form button {
-            padding: 10px 16px;
-            background: #ff6b6b;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", Roboto, sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 12px;
+      min-height: 100vh;
+    }
 
-        /* 5x4 (총 20개) 그리드 뽑기판 */
-        .kuji-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr); /* 한 줄에 5개씩 */
-            gap: 8px;
-            margin-bottom: 16px;
-        }
+    .container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-        /* 뽑기 카드 스타일 */
-        .card {
-            aspect-ratio: 1 / 1;
-            background: linear-gradient(135deg, #ff8787, #ff6b6b);
-            color: white;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            user-select: none;
-            transition: transform 0.1s ease;
-        }
-        .card:active { transform: scale(0.95); }
-        
-        /* 이미 뽑힌 카드 (뜯긴 흔적: 상 이름만 심플하게 표시) */
-        .card.drawn {
-            background: #e9ecef;
-            color: #868e96;
-            cursor: not-allowed;
-            font-size: 13px;
-            border: 1px dashed #adb5bd;
-        }
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #ff4757;
+      margin-bottom: 20px;
+      text-align: center;
+    }
 
-        /* 공통 모달(팝업) 스타일 */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-        }
-        .modal-content {
-            background: white;
-            padding: 24px;
-            border-radius: 20px;
-            width: 85%;
-            max-width: 320px;
-            text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-        .modal-content h3 { margin-top: 0; color: #ff6b6b; }
-        .modal-msg { font-size: 15px; margin: 15px 0 20px 0; line-height: 1.4; word-break: keep-all; }
-        
-        .admin-list { list-style: none; padding: 0; margin: 10px 0; font-size: 13px; text-align: left; max-height: 150px; overflow-y: auto; }
-        .admin-list li { padding: 6px 0; border-bottom: 1px solid #eee; }
+    /* 이름 입력 창 (아이폰 사파리 자동 확대 방지를 위해 font-size 16px 적용) */
+    .input-section {
+      width: 100%;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
 
-        .modal-btn {
-            width: 100%;
-            padding: 10px;
-            background: #ff6b6b;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .btn-reset-admin {
-            background: #fa5252;
-            margin-top: 10px;
-        }
-    </style>
+    .name-input {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 16px; 
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      outline: none;
+      text-align: center;
+      background: #ffffff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      transition: border-color 0.2s;
+    }
+
+    .name-input:focus {
+      border-color: #ff4757;
+    }
+
+    /* 관리자 전용 데이터 보기 버튼 */
+    .admin-btn {
+      display: none;
+      width: 100%;
+      padding: 12px;
+      background-color: #2ed573;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(46, 213, 115, 0.2);
+    }
+
+    /* 쿠지 그리드 판 (5열 4행 = 총 20개) */
+    .kuji-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      width: 100%;
+    }
+
+    .kuji-card {
+      aspect-ratio: 1;
+      background: linear-gradient(135deg, #ff6b81, #ff4757);
+      color: white;
+      font-weight: 700;
+      font-size: 18px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(255, 71, 87, 0.2);
+      user-select: none;
+      touch-action: manipulation;
+      transition: transform 0.1s ease, background 0.3s ease;
+      text-align: center;
+      padding: 4px;
+      word-break: keep-all;
+    }
+
+    .kuji-card:active {
+      transform: scale(0.95);
+    }
+
+    /* 오픈된 쿠지 카드의 스타일 (흔적 남기기) */
+    .kuji-card.opened {
+      cursor: default;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+      transform: none;
+    }
+
+    .kuji-card.rank-a {
+      background: #ffd700;
+      color: #795548;
+      border: 2px solid #ffb300;
+    }
+
+    .kuji-card.rank-b {
+      background: #ff758c;
+      color: #ffffff;
+    }
+
+    .kuji-card.rank-c {
+      background: #e2e8f0;
+      color: #4a5568;
+    }
+
+    .card-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      width: 100%;
+    }
+
+    .rank-title {
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .rank-desc {
+      font-size: 9px;
+      margin-top: 2px;
+      opacity: 0.9;
+      line-height: 1.1;
+    }
+
+    /* 관리자 대시보드 모달 */
+    .admin-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .admin-modal-content {
+      background: white;
+      width: 100%;
+      max-width: 440px;
+      max-height: 80vh;
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .admin-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .record-list {
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .record-item {
+      padding: 10px 12px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .record-time {
+      font-size: 11px;
+      color: #888;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>✨ Nana Kuji 뽑기판 ✨</h1>
+  <div class="container">
+    <h1>나나쿠지 🎁</h1>
 
-        <!-- 상품 구성 표기 -->
-        <div class="prize-info">
-            <span>🥇 A상 (3개)</span>
-            <span>🥈 B상 (7개)</span>
-            <span>🥉 C상 (10개)</span>
-        </div>
-
-        <!-- 이름 입력 영역 -->
-        <div class="user-form" id="user-section">
-            <input type="text" id="username-input" placeholder="이름을 입력해 주세요">
-            <button id="start-btn">확인</button>
-        </div>
-
-        <!-- 5x4 (20개) 뽑기판 -->
-        <div class="kuji-grid" id="grid"></div>
+    <div class="input-section">
+      <input type="text" id="userName" class="name-input" placeholder="참여자 이름을 입력해 주세요" autocomplete="off" />
+      <button id="adminBtn" class="admin-btn" onclick="openAdminModal()">📋 관리자: 전체 결과 조회하기</button>
     </div>
 
-    <!-- 당첨 결과 팝업 모달 -->
-    <div class="modal" id="result-modal">
-        <div class="modal-content">
-            <h3>🎉 당첨 결과</h3>
-            <div class="modal-msg" id="result-msg-text">내용</div>
-            <button class="modal-btn" onclick="closeResultModal()">확인</button>
-        </div>
+    <!-- 5열 4행 (20개) 쿠지 판 -->
+    <div class="kuji-grid" id="grid"></div>
+  </div>
+
+  <!-- 관리자용 현황 확인 모달 -->
+  <div class="admin-modal" id="adminModal">
+    <div class="admin-modal-content">
+      <div class="admin-modal-header">
+        <span>전체 뽑기 기록</span>
+        <button class="close-btn" onclick="closeAdminModal()">✕</button>
+      </div>
+      <div class="record-list" id="recordList">
+        <p style="text-align:center; color:#888;">기록을 불러오는 중...</p>
+      </div>
     </div>
+  </div>
 
-    <!-- 관리자 전용 모달 (목록 및 초기화) -->
-    <div class="modal" id="admin-modal">
-        <div class="modal-content" style="text-align: left;">
-            <h3>👑 관리자 모드</h3>
-            <div style="font-size: 13px; font-weight: bold; margin-top: 8px;">참여자 목록:</div>
-            <ul class="admin-list" id="admin-list"></ul>
-            <button class="modal-btn btn-reset-admin" id="admin-reset-btn">판 초기화 (새 20개 생성)</button>
-            <button onclick="closeAdminModal()" style="width:100%; padding:8px; margin-top:8px; background:#e9ecef; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">닫기</button>
+  <script>
+    // -------------------------------------------------------------
+    // 1. Supabase 접속 설정 (URL 및 키 적용 완료)
+    // -------------------------------------------------------------
+    const SUPABASE_URL = "https://stenxfgovxvpydguwurx.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_MIma1WJVuS0E2ghlj9rxzw_95O87v05"; 
+    
+    let supabaseClient = null;
+    try {
+      if (window.supabase) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+    } catch (e) {
+      console.error("Supabase 연동 오류:", e);
+    }
+
+    // -------------------------------------------------------------
+    // 2. 상품 설정 (총 20개 : A상 3개, B상 7개, C상 10개)
+    // -------------------------------------------------------------
+    const initialPrizes = [
+      ...Array(3).fill({ rank: "A상", text: "스페셜기프트+배달까지!", class: "rank-a" }),
+      ...Array(7).fill({ rank: "B상", text: "스페셜기프트 당첨!", class: "rank-b" }),
+      ...Array(10).fill({ rank: "C상", text: "주인장+먼작귀 셀카 당첨!", class: "rank-c" })
+    ];
+
+    // 무작위 셔플 (모든 칸 뽑기 확률 동일)
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    const shuffledPrizes = shuffle(initialPrizes);
+
+    // -------------------------------------------------------------
+    // 3. UI 요소 생성 및 관리자 감지
+    // -------------------------------------------------------------
+    const gridContainer = document.getElementById("grid");
+    const nameInput = document.getElementById("userName");
+    const adminBtn = document.getElementById("adminBtn");
+
+    // '관리자이하나' 감지
+    nameInput.addEventListener("input", (e) => {
+      const value = e.target.value.trim();
+      if (value === "관리자이하나") {
+        adminBtn.style.display = "block";
+      } else {
+        adminBtn.style.display = "none";
+      }
+    });
+
+    // 20개 카드 배치
+    shuffledPrizes.forEach((prizeObj, index) => {
+      const card = document.createElement("div");
+      card.className = "kuji-card";
+      card.textContent = index + 1;
+      card.dataset.rank = prizeObj.rank;
+      card.dataset.text = prizeObj.text;
+      card.dataset.cssClass = prizeObj.class;
+
+      card.addEventListener("click", () => handleDraw(card));
+      gridContainer.appendChild(card);
+    });
+
+    // -------------------------------------------------------------
+    // 4. 뽑기 진행 함수
+    // -------------------------------------------------------------
+    async function handleDraw(card) {
+      const name = nameInput.value.trim();
+
+      if (!name) {
+        alert("참여자 이름을 먼저 입력해 주세요!");
+        nameInput.focus();
+        return;
+      }
+
+      if (card.classList.contains("opened")) {
+        return;
+      }
+
+      const rank = card.dataset.rank;
+      const text = card.dataset.text;
+      const cssClass = card.dataset.cssClass;
+
+      // 카드 뽑은 상태로 변경 (흔적 남기기)
+      card.classList.add("opened", cssClass);
+      card.innerHTML = `
+        <div class="card-content">
+          <div class="rank-title">${rank}</div>
+          <div class="rank-desc">${text}</div>
         </div>
-    </div>
+      `;
 
-    <script>
-        const SUPABASE_URL = 'https://qowkwhcfbdfxmyuvwzox.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... (전체 Anon Key 입력)'; 
+      const resultValue = `${name} - ${rank}: ${text}`;
 
-        let supabaseClient = null;
-        let currentUser = "";
+      // Supabase 데이터 저장
+      if (supabaseClient) {
+        try {
+          const { error } = await supabaseClient
+            .from("nana_results")
+            .insert([{ result_value: resultValue }]);
 
-        const PRIZE_TEXTS = {
-            A: "A상 당첨! 스페셜 기프트에 배달까지!",
-            B: "B상 당첨! 스페셜 기프트 당첨!",
-            C: "C상 당첨! 주인장+먼작귀 셀카 증정!"
-        };
-
-        const DEFAULT_CARDS = [
-            'A','A','A',
-            'B','B','B','B','B','B','B',
-            'C','C','C','C','C','C','C','C','C','C'
-        ];
-
-        let cardsState = [];
-        let drawHistory = [];
-
-        async function init() {
-            if (window.supabase) {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            }
-            await loadBoardState();
-            renderGrid();
+          if (error) {
+            console.error("DB 저장 오류:", error);
+          }
+        } catch (err) {
+          console.error("네트워크 오류:", err);
         }
+      }
 
-        // 서버에서 최신 상태 불러오기
-        async function loadBoardState() {
-            if (!supabaseClient) {
-                initLocalCards();
-                return;
-            }
-            try {
-                const { data } = await supabaseClient.from('kuji_board').select('*').eq('id', 1).single();
-                if (data && data.cards) {
-                    cardsState = data.cards;
-                    drawHistory = data.history || [];
-                } else {
-                    initLocalCards();
-                    await saveBoardState();
-                }
-            } catch (err) {
-                initLocalCards();
-            }
-        }
+      // 당첨 안내 팝업
+      setTimeout(() => {
+        alert(`🎉 ${name}님 당첨 결과 🎉\n\n[ ${rank} ]\n${text}`);
+      }, 100);
+    }
 
-        function initLocalCards() {
-            const shuffled = [...DEFAULT_CARDS].sort(() => Math.random() - 0.5);
-            cardsState = shuffled.map((prize, idx) => ({
-                id: idx,
-                prize: prize,
-                drawn: false,
-                text: PRIZE_TEXTS[prize],
-                drawnBy: ''
-            }));
-            drawHistory = [];
-        }
+    // -------------------------------------------------------------
+    // 5. 관리자 기능 ('관리자이하나' 전용 기록 조회)
+    // -------------------------------------------------------------
+    async function openAdminModal() {
+      const modal = document.getElementById("adminModal");
+      const recordList = document.getElementById("recordList");
+      modal.style.display = "flex";
+      recordList.innerHTML = `<p style="text-align:center; color:#888;">기록을 불러오는 중...</p>`;
 
-        async function saveBoardState() {
-            if (!supabaseClient) return;
-            await supabaseClient.from('kuji_board').upsert({
-                id: 1,
-                cards: cardsState,
-                history: drawHistory
-            });
-        }
+      if (!supabaseClient) {
+        recordList.innerHTML = `<p style="text-align:center; color:#e74c3c;">Supabase 클라이언트 연동에 실패했습니다.</p>`;
+        return;
+      }
 
-        // 5x4 그리드 렌더링
-        function renderGrid() {
-            const gridEl = document.getElementById('grid');
-            gridEl.innerHTML = '';
+      const { data, error } = await supabaseClient
+        .from("nana_results")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-            cardsState.forEach((card, index) => {
-                const cardEl = document.createElement('div');
-                
-                if (card.drawn) {
-                    // 이미 뽑힌 경우: 뜯긴 흔적으로 상 이름만 심플하게 표시
-                    cardEl.className = 'card drawn';
-                    cardEl.innerText = `${card.prize}상`;
-                } else {
-                    // 안 뽑힌 경우: 번호 표시
-                    cardEl.className = 'card';
-                    cardEl.innerText = index + 1;
-                    cardEl.addEventListener('click', () => handleCardClick(index));
-                }
+      if (error) {
+        recordList.innerHTML = `<p style="text-align:center; color:#e74c3c;">불러오기 실패: ${error.message}</p>`;
+        return;
+      }
 
-                gridEl.appendChild(cardEl);
-            });
-        }
+      if (!data || data.length === 0) {
+        recordList.innerHTML = `<p style="text-align:center; color:#888;">아직 참여한 기록이 없습니다.</p>`;
+        return;
+      }
 
-        // 카드 클릭 시 뽑기 실행
-        async function handleCardClick(index) {
-            if (!currentUser) {
-                alert('먼저 이름을 입력하고 확인을 눌러주세요!');
-                document.getElementById('username-input').focus();
-                return;
-            }
-
-            // 최신 상태를 서버에서 다시 동기화하여 겹침 방지
-            await loadBoardState();
-            if (cardsState[index].drawn) {
-                alert('이미 다른 사람이 뽑은 카드입니다!');
-                renderGrid();
-                return;
-            }
-
-            const card = cardsState[index];
-            card.drawn = true;
-            card.drawnBy = currentUser;
-            
-            drawHistory.push({
-                user: currentUser,
-                prize: card.prize,
-                cardIndex: index + 1,
-                date: new Date().toLocaleTimeString()
-            });
-
-            renderGrid();
-            await saveBoardState();
-
-            // 당첨 팝업 띄우기
-            showResultModal(card.text);
-        }
-
-        function showResultModal(text) {
-            document.getElementById('result-msg-text').innerText = text;
-            document.getElementById('result-modal').style.display = 'flex';
-        }
-
-        function closeResultModal() {
-            document.getElementById('result-modal').style.display = 'none';
-        }
-
-        // 이름 확인 버튼
-        document.getElementById('start-btn').addEventListener('click', async () => {
-            const nameInput = document.getElementById('username-input').value.trim();
-            if (!nameInput) {
-                alert('이름을 입력해 주세요!');
-                return;
-            }
-
-            // 관리자 로그인 분기
-            if (nameInput === '관리자이하나') {
-                await loadBoardState();
-                showAdminModal();
-                return;
-            }
-
-            currentUser = nameInput;
-            alert(`환영합니다, ${currentUser}님! 원하는 번호를 터치해 주세요.`);
-            document.getElementById('username-input').disabled = true;
-            document.getElementById('start-btn').innerText = '참여중';
-            document.getElementById('start-btn').disabled = true;
+      recordList.innerHTML = data.map(item => {
+        const date = new Date(item.created_at).toLocaleString('ko-KR', {
+          month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
         });
+        return `
+          <div class="record-item">
+            <span><strong>${item.result_value}</strong></span>
+            <span class="record-time">${date}</span>
+          </div>
+        `;
+      }).join('');
+    }
 
-        function showAdminModal() {
-            const listEl = document.getElementById('admin-list');
-            listEl.innerHTML = '';
-            if (drawHistory.length === 0) {
-                listEl.innerHTML = '<li>아직 참여 내역이 없습니다.</li>';
-            } else {
-                drawHistory.forEach(h => {
-                    const li = document.createElement('li');
-                    li.innerText = `[${h.date}] ${h.user}님 ➡️ ${h.cardIndex}번 (${h.prize}상)`;
-                    listEl.appendChild(li);
-                });
-            }
-            document.getElementById('admin-modal').style.display = 'flex';
-        }
-
-        function closeAdminModal() {
-            document.getElementById('admin-modal').style.display = 'none';
-        }
-
-        // 관리자 모달 내 초기화 버튼
-        document.getElementById('admin-reset-btn').addEventListener('click', async () => {
-            if (confirm('모든 뽑기를 초기화하고 새로운 20개 판을 만드시겠습니까?')) {
-                initLocalCards();
-                renderGrid();
-                await saveBoardState();
-                alert('새로운 20개 뽑기판이 생성되었습니다!');
-                closeAdminModal();
-            }
-        });
-
-        window.addEventListener('DOMContentLoaded', init);
-    </script>
+    function closeAdminModal() {
+      document.getElementById("adminModal").style.display = "none";
+    }
+  </script>
 </body>
 </html>
